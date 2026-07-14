@@ -1,5 +1,6 @@
 "use client"
 import Image from "next/image"
+import Link from "next/link"
 import { useState, useEffect, useRef, useCallback } from "react"
 import FacebookIcon from '../public/icons/facebook-f.svg'
 import FactoryIcon from '../public/icons/factory.svg'
@@ -16,8 +17,6 @@ import HandymanIcon from '../public/icons/handyman.svg'
 import WallIcon from '../public/icons/power_input.svg'
 import CalendarIcon from '../public/icons/calendar_month_24dp.svg'
 import PeopleIcon from '../public/icons/groups.svg'
-import ForumIcon from '../public/icons/forum.svg'
-import PointSaleIcon from '../public/icons/point_of_sale.svg'
 
 const arquiteturaItems = [
   "Design de interiores para o seu projeto, dos acabamentos à decoração",
@@ -28,22 +27,25 @@ const arquiteturaItems = [
 ]
 
 const services = [
-  { icon: FactoryIcon, title: "Construção civil", description: "Construímos com qualidade, segurança e eficiência. Desde o planeamento à execução, cuidamos de cada detalhe para entregar obras sólidas e duradouras.", list: null },
-  { icon: SquareIcon, title: "Arquitetura e design", description: null, list: arquiteturaItems },
-  { icon: ManufacturingIcon, title: "Remodelações gerais", description: "Remodelações completas e parciais de interiores e exteriores. Valorizamos e transformamos espaços, sempre com acabamentos de excelência.", list: null },
-  { icon: WallIcon, title: "Levantamento de alvenarias", description: "Execução de alvenaria de tijolo com precisão e qualidade estrutural.", list: null },
-  { icon: HandymanIcon, title: "Construção Lsf", description: "Soluções inovadoras, sustentáveis e eficientes. Construções mais rápidas, resistentes, de alta qualidade e com excelente desempenho térmico e acústico.", list: null },
-  { icon: PaintIcon, title: "Rebocos e pinturas", description: "Aplicação de reboco tradicional com excelente acabamento e durabilidade.", list: null },
+  { icon: FactoryIcon, title: "Construção civil", id: "construcao-civil", description: "Construímos com qualidade, segurança e eficiência. Desde o planeamento à execução, cuidamos de cada detalhe para entregar obras sólidas e duradouras.", list: null },
+  { icon: SquareIcon, title: "Arquitetura e design", id: "arquitetura-design", description: null, list: arquiteturaItems },
+  { icon: ManufacturingIcon, title: "Remodelações gerais", id: "remodelacoes", description: "Remodelações completas e parciais de interiores e exteriores. Valorizamos e transformamos espaços, sempre com acabamentos de excelência.", list: null },
+  { icon: WallIcon, title: "Levantamento de alvenarias", id: "alvenaria", description: "Execução de alvenaria de tijolo com precisão e qualidade estrutural.", list: null },
+  { icon: HandymanIcon, title: "Construção Lsf", id: "lsf", description: "Soluções inovadoras, sustentáveis e eficientes. Construções mais rápidas, resistentes, de alta qualidade e com excelente desempenho térmico e acústico.", list: null },
+  { icon: PaintIcon, title: "Rebocos e pinturas", id: "reboco-estuque", description: "Aplicação de reboco tradicional com excelente acabamento e durabilidade.", list: null },
 ]
 
-const slides = [
-  { image: "/images/trabalho-1.jpeg", title: "Remodelação", description: "Remodelação de interiores para espaços modernos e funcionais" },
-  { image: "/projects/project-2.jpg", title: "Remodelação Completa", description: "Transformação total de espaços residenciais" },
-  { image: "/projects/project-3.jpg", title: "Edifício Comercial", description: "Projetos corporativos com design funcional" },
-  { image: "/projects/project-4.jpg", title: "Construção LSF", description: "Estruturas leves, rápidas e duráveis" },
-]
+// Itens do menu suspenso "Serviços" — apontam para as âncoras da página /servicos
+const serviceMenuItems = services.map((s) => ({ label: s.title, id: s.id }))
 
-const navLinks = ["Inicio", "Sobre", "Serviços", "Depoimentos", "Contactos"]
+const navLinks = [
+  { label: "Inicio", id: "inicio" },
+  { label: "Sobre", id: "sobre" },
+  { label: "Serviços", id: "servicos" },
+  { label: "Diferenciais", id: "diferenciais" },
+  { label: "Portfolio", id: "portfolio" },
+  { label: "Contactos", id: "contactos" },
+]
 
 // ── HOOKS ──────────────────────────────────────────────────
 
@@ -153,10 +155,14 @@ function SkeletonImage({ src, alt, width, height, className, fill, priority }: {
 // ── PAGE ───────────────────────────────────────────────────
 
 export default function Home() {
-  const [current, setCurrent] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const [paused, setPaused] = useState(false)
+  const [servicesOpen, setServicesOpen] = useState(false)
+  const [mobileServicesOpen, setMobileServicesOpen] = useState(false)
+  const [name, setName] = useState("")
+  const [contact, setContact] = useState("")
+  const [project_type, setProjectType] = useState("")
+  const [message, setMessage] = useState("")
   const heroBg = useParallax(0.3)
   const bannerParallax = useParallax(0.25)
   const { ref: counterRef, count } = useCounter(30)
@@ -172,16 +178,44 @@ export default function Home() {
     return () => { document.body.style.overflow = "" }
   }, [menuOpen])
 
-  // Slideshow automático
-  useEffect(() => {
-    if (paused) return
-    const id = setInterval(() => setCurrent(c => (c + 1) % slides.length), 4000)
-    return () => clearInterval(id)
-  }, [paused])
 
-  const go = useCallback((index: number) => {
-    setCurrent(((index % slides.length) + slides.length) % slides.length)
+  const scrollToSection = useCallback((id: string) => {
+    const el = document.getElementById(id)
+    if (!el) return
+    const headerOffset = 80 // altura aproximada do header fixo
+    const top = el.getBoundingClientRect().top + window.scrollY - headerOffset
+    window.scrollTo({ top, behavior: "smooth" })
   }, [])
+
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ) => {
+    e.preventDefault();
+
+    const form = e.currentTarget;
+
+    const data = {
+      name,
+      contact,
+      project_type,
+      message,
+    };
+
+    const res = await fetch("/api/contact", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (res.ok) {
+      alert("Mensagem enviada com sucesso!");
+      form.reset();
+    } else {
+      alert("Erro ao enviar.");
+    }
+  };
 
   return (
     <>
@@ -201,10 +235,49 @@ export default function Home() {
 
             <ol className="hidden md:flex gap-4 lg:gap-6 items-center">
               {navLinks.map((link) => (
-                <li key={link} className="hover:text-blue-700 transition-colors duration-200 cursor-pointer text-sm font-medium">{link}</li>
+                link.id === "servicos" ? (
+                  <li key={link.id} className="relative"
+                    onMouseEnter={() => setServicesOpen(true)}
+                    onMouseLeave={() => setServicesOpen(false)}>
+                    <Link href="/servicos"
+                      className="hover:text-blue-700 transition-colors duration-200 cursor-pointer text-sm font-medium">
+                      {link.label}
+                    </Link>
+                    <div className={`absolute top-full left-1/2 -translate-x-1/2 pt-3 transition-all duration-200
+                      ${servicesOpen ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"}`}>
+                      <div className="bg-white rounded-lg shadow-2xl border border-gray-100 py-2 w-64">
+                        {serviceMenuItems.map((item) => (
+                          <Link key={item.id} href={`/servicos#${item.id}`}
+                            className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-150">
+                            {item.label}
+                          </Link>
+                        ))}
+                        <div className="my-1 border-t border-gray-100" />
+                        <Link href="/servicos"
+                          className="block px-4 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-50 transition-colors duration-150">
+                          Ver todos os serviços
+                        </Link>
+                      </div>
+                    </div>
+                  </li>
+                ) : link.id === "portfolio" ? (
+                  <li key={link.id}>
+                    <Link href="/portfolio"
+                      className="hover:text-blue-700 transition-colors duration-200 cursor-pointer text-sm font-medium">
+                      {link.label}
+                    </Link>
+                  </li>
+                ) : (
+                  <li key={link.id}
+                    onClick={() => scrollToSection(link.id)}
+                    className="hover:text-blue-700 transition-colors duration-200 cursor-pointer text-sm font-medium">
+                    {link.label}
+                  </li>
+                )
               ))}
               <li>
-                <button className="border-2 border-blue-400 text-blue-400 py-2 px-4 lg:px-6 rounded uppercase font-bold text-sm
+                <button onClick={() => scrollToSection("contactos")}
+                  className="border-2 border-blue-400 text-blue-400 py-2 px-4 lg:px-6 rounded uppercase font-bold text-sm
                   hover:bg-blue-600 hover:border-blue-600 hover:text-white hover:shadow-lg hover:shadow-blue-200
                   active:scale-95 transition-all duration-300 cursor-pointer">
                   Pedir análise
@@ -230,13 +303,52 @@ export default function Home() {
           </div>
           <nav className="flex flex-col px-6 py-8 gap-1 flex-1">
             {navLinks.map((link, i) => (
-              <button key={link} onClick={() => setMenuOpen(false)}
-                style={{ transitionDelay: menuOpen ? `${i * 50}ms` : "0ms" }}
-                className={`text-left py-3 px-4 rounded-lg text-gray-700 font-medium hover:bg-blue-50 hover:text-blue-700
-                  transition-all duration-200 cursor-pointer
-                  ${menuOpen ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"}`}>
-                {link}
-              </button>
+              link.id === "servicos" ? (
+                <div key={link.id}>
+                  <button
+                    onClick={() => setMobileServicesOpen((v) => !v)}
+                    style={{ transitionDelay: menuOpen ? `${i * 50}ms` : "0ms" }}
+                    className={`w-full flex items-center justify-between text-left py-3 px-4 rounded-lg text-gray-700 font-medium hover:bg-blue-50 hover:text-blue-700
+                      transition-all duration-200 cursor-pointer
+                      ${menuOpen ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"}`}>
+                    {link.label}
+                    <span className={`text-xs transition-transform duration-200 ${mobileServicesOpen ? "rotate-180" : ""}`}>▾</span>
+                  </button>
+                  <div className={`overflow-hidden transition-all duration-300 ${mobileServicesOpen ? "max-h-96" : "max-h-0"}`}>
+                    <div className="flex flex-col pl-4">
+                      {serviceMenuItems.map((item) => (
+                        <Link key={item.id} href={`/servicos#${item.id}`}
+                          onClick={() => setMenuOpen(false)}
+                          className="py-2.5 px-4 text-sm text-gray-600 hover:text-blue-700 transition-colors duration-150">
+                          {item.label}
+                        </Link>
+                      ))}
+                      <Link href="/servicos" onClick={() => setMenuOpen(false)}
+                        className="py-2.5 px-4 text-sm font-semibold text-blue-700">
+                        Ver todos os serviços
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ) : link.id === "portfolio" ? (
+                <Link key={link.id} href="/portfolio"
+                  onClick={() => setMenuOpen(false)}
+                  style={{ transitionDelay: menuOpen ? `${i * 50}ms` : "0ms" }}
+                  className={`text-left py-3 px-4 rounded-lg text-gray-700 font-medium hover:bg-blue-50 hover:text-blue-700
+        transition-all duration-200 cursor-pointer
+        ${menuOpen ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"}`}>
+                  {link.label}
+                </Link>
+              ) : (
+                <button key={link.id}
+                  onClick={() => { setMenuOpen(false); scrollToSection(link.id) }}
+                  style={{ transitionDelay: menuOpen ? `${i * 50}ms` : "0ms" }}
+                  className={`text-left py-3 px-4 rounded-lg text-gray-700 font-medium hover:bg-blue-50 hover:text-blue-700
+        transition-all duration-200 cursor-pointer
+        ${menuOpen ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"}`}>
+                  {link.label}
+                </button>
+              )
             ))}
           </nav>
           <div className="px-6 py-6 border-t border-gray-100">
@@ -248,7 +360,7 @@ export default function Home() {
           </div>
         </aside>
 
-        <section className="relative overflow-hidden pt-20">
+        <section id="inicio" className="relative overflow-hidden pt-20">
           <div ref={heroBg.ref} className="absolute inset-0 -z-10"
             style={{ transform: `translateY(${heroBg.offset}px)` }}>
             <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-blue-100" />
@@ -256,17 +368,17 @@ export default function Home() {
 
           <div className="flex flex-col-reverse md:flex-row justify-between items-center gap-8 py-16 md:py-24 lg:py-30 px-6 md:px-16 lg:px-[250px]">
             <FadeSection className="flex-1">
-              <h1 className="max-w-lg capitalize text-3xl md:text-4xl lg:text-[40px] font-bold leading-tight mb-5">
-                Criando força e estilo em cada construção
+              <h1 className="max-w-lg  text-3xl md:text-4xl lg:text-[40px] font-bold leading-tight mb-5">
+                Construindo o futuro com sucesso
               </h1>
               <p className="max-w-md leading-7 mb-10 font-light text-sm">
                 Na SClick constroi, damos vida às suas visões com trabalho artesenal especializado, técnicas inovadoras e uma paixão por superar expectativas.
               </p>
-              <button className="bg-blue-700 text-white text-sm tracking-wider py-3 px-10 rounded uppercase font-bold cursor-pointer
+              <Link href="/servicos" className="inline-block bg-blue-700 text-white text-sm tracking-wider py-3 px-10 rounded uppercase font-bold cursor-pointer
                 hover:bg-blue-900 hover:shadow-xl hover:shadow-blue-300 hover:-translate-y-0.5
                 active:scale-95 transition-all duration-300">
                 Nossos serviços
-              </button>
+              </Link>
             </FadeSection>
 
             <FadeSection delay={150} className="flex-1 flex justify-center">
@@ -280,7 +392,7 @@ export default function Home() {
 
         <main className="px-6 md:px-16 lg:px-[250px]">
 
-          <div className="flex flex-col md:flex-row justify-between items-center gap-12 md:gap-16 lg:gap-20 mt-20 md:mt-25">
+          <div id="sobre" className="flex flex-col md:flex-row justify-between items-center gap-12 md:gap-16 lg:gap-20 mt-20 md:mt-25">
             <FadeSection className="w-full md:w-auto">
               <div className="relative inline-block group">
                 <div className="w-full max-w-[400px] rounded-lg overflow-hidden">
@@ -306,7 +418,7 @@ export default function Home() {
 
             <FadeSection delay={100} className="flex flex-col gap-6 py-10 md:py-16 lg:py-20 w-full md:flex-1">
               <p className="text-blue-700 text-sm font-bold">Sobre nós</p>
-              <h2 className="max-w-md capitalize text-2xl md:text-[30px] font-bold leading-tight">
+              <h2 className="max-w-md  text-2xl md:text-[30px] font-bold leading-tight">
                 Construa sua empresa ou casa dos sonhos connosco
               </h2>
               <p className="max-w-md leading-7 text-black font-light text-sm">
@@ -315,62 +427,26 @@ export default function Home() {
               <p className="max-w-md leading-7 text-black font-light text-sm">
                 Seja para residências, edifícios comerciais ou projetos personalizados, a Sclick constroi é a escolha confiável para transformar suas visões em estruturas sólidas e impressionantes.
               </p>
-              <button className="self-start bg-blue-700 text-white text-sm tracking-wider py-3 px-10 rounded uppercase font-bold cursor-pointer
+              <Link href="/servicos" className="self-start inline-block bg-blue-700 text-white text-sm tracking-wider py-3 px-10 rounded uppercase font-bold cursor-pointer
                 hover:bg-blue-900 hover:shadow-lg hover:shadow-blue-200 hover:-translate-y-0.5 active:scale-95 transition-all duration-300">
                 Conhecer nossos serviços
-              </button>
+              </Link>
             </FadeSection>
           </div>
 
-          <div className="my-24 md:my-[150px]">
-            <FadeSection>
-              <p className="text-blue-700 text-sm font-bold">Serviços</p>
-              <h2 className="max-w-md capitalize text-2xl md:text-[30px] font-bold leading-tight my-2">Conheça as nossas áreas de atuação</h2>
-              <p className="max-w-md font-light text-sm">Na Sclick constroi, destacamo-nos por nossa dedicação à qualidade, inovação e satisfação do cliente.</p>
-            </FadeSection>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 my-8">
-              {services.map((service, index) => (
-                <FadeSection key={index} delay={index * 80}>
-                  <div className="h-full p-4 rounded-md bg-gray-100
-                    hover:bg-white hover:shadow-xl hover:shadow-blue-100 hover:-translate-y-1
-                    transition-all duration-300 cursor-default group">
-                    <div className="w-10 h-10 bg-blue-600 rounded-md mb-4 flex items-center justify-center
-                      group-hover:bg-blue-700 group-hover:scale-110 transition-all duration-300">
-                      <service.icon width={20} height={20} color="white" />
-                    </div>
-                    <h3 className="font-semibold text-lg mb-2">{service.title}</h3>
-
-                    {service.list ? (
-                      <ul className="text-sm text-black/80 space-y-1 list-none">
-                        {service.list.map((item, i) => (
-                          <li key={i} className="flex items-start gap-2">
-                            <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0" />
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-sm text-black/80">{service.description}</p>
-                    )}
-                  </div>
-                </FadeSection>
-              ))}
-            </div>
-          </div>
-
-          <section className="my-24 md:my-[200px]">
+          <section id="diferenciais" className="my-24 md:my-[200px]">
             <FadeSection>
               <p className="text-blue-700 text-sm font-bold text-center">Porquê nos escolher</p>
-              <h2 className="text-2xl md:text-3xl font-bold text-center mt-2 mb-12 md:mb-16">Conheça Os Nossos Diferenciais</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-center mt-2 mb-12 md:mb-16">Porque Escolher a Nossa Empresa?</h2>
             </FadeSection>
 
             {/* Desktop: 3 colunas */}
             <div className="hidden md:grid md:grid-cols-[1fr_auto_1fr] md:items-center md:gap-8">
               <div className="flex flex-col gap-12">
                 {[
-                  { icon: CalendarIcon, title: "Cronograma Realista", desc: "Levantamento completo antes de dar prazos, eliminando estimativas que atrasam." },
-                  { icon: ForumIcon, title: "Comunicação Transparente", desc: "Relatórios periódicos e canal directo com o responsável de obra." },
+                  { icon: FactoryIcon, title: "Experiência em Obras Públicas e Particulares", desc: "Anos de experiência ao serviço de clientes públicos e privados." },
+                  { icon: PeopleIcon, title: "Equipa Qualificada e Especializada", desc: "Profissionais experientes, comprometidos com cada projeto." },
+                  { icon: ManufacturingIcon, title: "Materiais de Elevada Qualidade", desc: "Selecionamos materiais que garantem durabilidade e bom acabamento." },
                 ].map((item, i) => (
                   <FadeSection key={item.title} delay={i * 100}>
                     <div className="flex items-start gap-4 group">
@@ -395,8 +471,8 @@ export default function Home() {
 
               <div className="flex flex-col gap-12">
                 {[
-                  { icon: PeopleIcon, title: "Equipe Dedicada", desc: "Profissionais específicos do início ao fim, evitando perda de contexto." },
-                  { icon: PointSaleIcon, title: "Orçamento Protegido", desc: "Todos os custos mapeados no planeamento, eliminando os imprevistos no projecto." },
+                  { icon: SquareIcon, title: "Soluções Personalizadas", desc: "Cada projeto é pensado à medida das necessidades do cliente." },
+                  { icon: CalendarIcon, title: "Rigor e Profissionalismo", desc: "Acompanhamento em todas as fases da obra, do início ao fim." },
                 ].map((item, i) => (
                   <FadeSection key={item.title} delay={i * 100}>
                     <div className="flex items-start gap-4 group">
@@ -421,10 +497,11 @@ export default function Home() {
                   width={280} height={360} className="object-contain" />
               </FadeSection>
               {[
-                { title: "Cronograma Realista", desc: "Levantamento completo antes de dar prazos, eliminando estimativas que atrasam." },
-                { title: "Comunicação Transparente", desc: "Relatórios periódicos e canal directo com o responsável de obra." },
-                { title: "Equipe Dedicada", desc: "Profissionais específicos do início ao fim, evitando perda de contexto." },
-                { title: "Orçamento Protegido", desc: "Todos os custos mapeados no planeamento, eliminando os imprevistos no projecto." },
+                { title: "Experiência em Obras Públicas e Particulares", desc: "Anos de experiência ao serviço de clientes públicos e privados." },
+                { title: "Equipa Qualificada e Especializada", desc: "Profissionais experientes, comprometidos com cada projeto." },
+                { title: "Materiais de Elevada Qualidade", desc: "Selecionamos materiais que garantem durabilidade e bom acabamento." },
+                { title: "Soluções Personalizadas", desc: "Cada projeto é pensado à medida das necessidades do cliente." },
+                { title: "Rigor e Profissionalismo", desc: "Acompanhamento em todas as fases da obra, do início ao fim." },
               ].map((item, i) => (
                 <FadeSection key={item.title} delay={i * 80}>
                   <div className="flex items-start gap-4 group">
@@ -438,60 +515,16 @@ export default function Home() {
                 </FadeSection>
               ))}
             </div>
+
+            <FadeSection className="mt-12">
+              <p className="text-center text-sm md:text-base font-semibold text-blue-700">
+                Construímos com qualidade, remodelamos com dedicação e transformamos projetos em realidade.
+              </p>
+            </FadeSection>
           </section>
 
-          <div className="my-24 md:my-[150px]">
-            <FadeSection className="flex flex-col items-center">
-              <p className="text-blue-700 text-sm font-bold text-center">Projectos</p>
-              <h2 className="capitalize text-2xl md:text-[30px] font-bold leading-tight mb-2 text-center">Projectos recentes</h2>
-              <p className="max-w-md font-light text-sm text-center">Conheça alguns dos nossos trabalhos mais recentes e inspire-se para o seu projecto.</p>
-            </FadeSection>
-
-            <FadeSection delay={100} className="mt-8">
-              <div className="w-full max-w-3xl mx-auto"
-                onMouseEnter={() => setPaused(true)}
-                onMouseLeave={() => setPaused(false)}>
-                <div className="relative overflow-hidden rounded-2xl shadow-2xl">
-                  <div className="flex transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
-                    style={{ transform: `translateX(-${current * 100}%)` }}>
-                    {slides.map((s, i) => (
-                      <div key={i} className="relative min-w-full h-64 sm:h-80 md:h-[420px] flex-shrink-0" aria-hidden={i !== current}>
-                        <SkeletonImage src={s.image} alt={s.title} fill priority={i === 0} className="object-cover" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-                          <h3 className="text-white text-xl md:text-2xl font-semibold mb-1">{s.title}</h3>
-                          <p className="text-white/80 text-sm leading-relaxed">{s.description}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <button onClick={() => go(current - 1)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white flex items-center justify-center text-xl
-                      hover:bg-white/50 hover:scale-110 active:scale-95 transition-all duration-200 cursor-pointer">‹</button>
-                  <button onClick={() => go(current + 1)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white flex items-center justify-center text-xl
-                      hover:bg-white/50 hover:scale-110 active:scale-95 transition-all duration-200 cursor-pointer">›</button>
-
-                  {!paused && (
-                    <div className="absolute bottom-0 left-0 h-0.5 bg-blue-400"
-                      style={{ animation: "progress 4s linear infinite", width: "100%" }} />
-                  )}
-                </div>
-
-                <div className="flex justify-center gap-2 mt-4">
-                  {slides.map((_, i) => (
-                    <button key={i} onClick={() => go(i)}
-                      className={`h-2 rounded-full transition-all duration-300 cursor-pointer border-none
-                        ${i === current ? "w-6 bg-blue-600" : "w-2 bg-gray-300 hover:bg-gray-400"}`} />
-                  ))}
-                </div>
-              </div>
-            </FadeSection>
-          </div>
-
           <FadeSection className="my-24 md:my-[200px] flex flex-col items-center gap-6 pb-32 md:pb-[200px]">
-            <h2 className="capitalize max-w-3xl text-2xl md:text-[30px] font-bold leading-tight mb-2 text-center">
+            <h2 className="max-w-3xl text-2xl md:text-[30px] font-bold leading-tight mb-2 text-center">
               Pronto para transformar complexidade em tranquilidade, <span className="text-blue-700">e valor em cada metro quadrado?</span>
             </h2>
             <p className="text-center max-w-xl text-sm md:text-base">
@@ -508,30 +541,40 @@ export default function Home() {
         <div className="relative">
           <div className="px-6 md:px-16 lg:px-0 relative z-10 flex justify-center" style={{ marginBottom: "-1px" }}>
             <FadeSection className="w-full max-w-5xl -mb-16 md:-mb-24">
-              <section className="bg-[#262626] px-6 md:px-12 py-8 md:py-10 rounded-2xl shadow-2xl
+              <section id="contactos" className="bg-[#262626] px-6 md:px-12 py-8 md:py-10 rounded-2xl shadow-2xl
                 flex flex-col md:flex-row justify-between items-center gap-8">
                 <div className="flex flex-col gap-2 w-full md:max-w-sm">
                   <p className="text-blue-700 text-sm font-bold">Entre em contacto</p>
                   <h2 className="text-white text-xl md:text-2xl font-semibold">Receba uma análise do seu projecto</h2>
-                  <div className="mt-4 flex flex-col gap-4">
-                    <input type="text" placeholder="Como podemos te chamar?"
-                      className="bg-white py-3 px-4 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:scale-[1.01] transition-transform duration-200" />
-                    <input type="text" placeholder="Número ou email para contacto"
-                      className="bg-white py-3 px-4 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:scale-[1.01] transition-transform duration-200" />
-                    <input type="text" placeholder="Qual o tipo de projecto?"
-                      className="bg-white py-3 px-4 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:scale-[1.01] transition-transform duration-200" />
-                    <button className="bg-blue-700 text-white text-sm tracking-wider py-3 px-6 rounded uppercase font-semibold cursor-pointer
+                  <form onSubmit={handleSubmit}>
+                    <div className="mt-4 flex flex-col gap-4">
+                      <input
+                        type="hidden"
+                        name="_next"
+                        value="https://sclickconstroi.pt/obrigado"
+                      />
+
+                      <input type="text" name="name" placeholder="Nome:"
+                        className="bg-white py-3 px-4 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:scale-[1.01] transition-transform duration-200" />
+                      <input type="text" name="contact" placeholder="Número ou email:"
+                        className="bg-white py-3 px-4 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:scale-[1.01] transition-transform duration-200" />
+                      <input type="text" name="project-type" placeholder="Qual o tipo de projecto?"
+                        className="bg-white py-3 px-4 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:scale-[1.01] transition-transform duration-200" />
+                      <textarea name="message" placeholder="Descrição adicional:"
+                        className="bg-white py-3 px-4 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:scale-[1.01] transition-transform duration-200 resize-none h-24" />
+                      <button className="bg-blue-700 text-white text-sm tracking-wider py-3 px-6 rounded uppercase font-semibold cursor-pointer
                       hover:bg-blue-600 hover:shadow-lg hover:-translate-y-0.5 active:scale-95 transition-all duration-300">
-                      Pedir análise de projecto
-                    </button>
-                  </div>
+                        Pedir análise de projecto
+                      </button>
+                    </div>
+                  </form>
                 </div>
 
                 <div className="flex flex-col gap-5 w-full md:w-auto">
                   {[
-                    { icon: PhoneInTalkIcon, title: "Número de telefone", value: "(351) 123 456 789" },
-                    { icon: MailIcon, title: "Email", value: "geral@sclick.com.pt" },
-                    { icon: LocationOnIcon, title: "Endereço", value: "Av. da Liberdade, 123 - 1000-000 Lisboa" },
+                    { icon: PhoneInTalkIcon, title: "Número de telefone", value: "(351) 931 787 768" },
+                    { icon: MailIcon, title: "Email", value: "geral@slickconstroi.pt" },
+                    { icon: LocationOnIcon, title: "Endereço", value: "Praceta Timor Lorosae, Lote 22B, R/C DTO" },
                     { icon: ScheduleIcon, title: "Horário de atendimento", value: "Segunda a Sexta: 9h - 18h" },
                   ].map((item) => (
                     <div key={item.title} className="flex flex-row gap-3 group">
@@ -570,7 +613,7 @@ export default function Home() {
             </div>
           </footer>
         </div>
-      </div>
+      </div >
 
       <style>{`
         @keyframes progress {
