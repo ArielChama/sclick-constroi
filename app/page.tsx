@@ -163,6 +163,7 @@ export default function Home() {
   const [contact, setContact] = useState("")
   const [project_type, setProjectType] = useState("")
   const [message, setMessage] = useState("")
+  const [submitting, setSubmitting] = useState(false)
   const heroBg = useParallax(0.3)
   const bannerParallax = useParallax(0.25)
   const { ref: counterRef, count } = useCounter(30)
@@ -192,7 +193,12 @@ export default function Home() {
   ) => {
     e.preventDefault();
 
-    const form = e.currentTarget;
+    if (!name.trim() || !contact.trim()) {
+      alert("Por favor preenche pelo menos o nome e o contacto.");
+      return;
+    }
+
+    setSubmitting(true);
 
     const data = {
       name,
@@ -201,19 +207,30 @@ export default function Home() {
       message,
     };
 
-    const res = await fetch("/api/contact", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
 
-    if (res.ok) {
-      alert("Mensagem enviada com sucesso!");
-      form.reset();
-    } else {
-      alert("Erro ao enviar.");
+      const result = await res.json().catch(() => null);
+
+      if (res.ok) {
+        alert("Mensagem enviada com sucesso!");
+        setName("");
+        setContact("");
+        setProjectType("");
+        setMessage("");
+      } else {
+        alert(result?.error || "Erro ao enviar. Tenta novamente ou contacta-nos por telefone.");
+      }
+    } catch (err) {
+      alert("Erro de ligação ao enviar. Tenta novamente.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -454,7 +471,6 @@ export default function Home() {
                         <h3 className="font-bold text-lg">{item.title}</h3>
                         <p className="text-gray-500 text-sm mt-1">{item.desc}</p>
                       </div>
-                      {/* Mudamos o texto inicial para azul escuro (text-blue-600) e no hover para branco (group-hover:text-white) */}
                       <div className="bg-blue-100 text-blue-600 p-4 rounded-lg w-16 h-16 flex items-center justify-center shrink-0
         group-hover:bg-blue-600 group-hover:text-white group-hover:scale-105 transition-all duration-300">
                         <item.icon width={25} height={25} className="fill-current" />
@@ -476,7 +492,6 @@ export default function Home() {
                 ].map((item, i) => (
                   <FadeSection key={item.title} delay={i * 100}>
                     <div className="flex items-start gap-4 group">
-                      {/* Aplicamos a mesma lógica de inversão de cores aqui */}
                       <div className="bg-blue-100 text-blue-600 p-4 rounded-lg w-16 h-16 flex items-center justify-center shrink-0
         group-hover:bg-blue-600 group-hover:text-white group-hover:scale-105 transition-all duration-300">
                         <item.icon width={25} height={25} className="fill-current" />
@@ -530,7 +545,7 @@ export default function Home() {
             <p className="text-center max-w-xl text-sm md:text-base">
               Vamos criar um projecto que respeite a sua visão, seu investimento e o seu tempo — com técnica, estética e planeamento.
             </p>
-            <button className="bg-blue-700 text-white text-sm tracking-wider py-3 px-10 md:px-12 rounded uppercase font-semibold cursor-pointer
+            <button onClick={() => scrollToSection("contactos")} className="bg-blue-700 text-white text-sm tracking-wider py-3 px-10 md:px-12 rounded uppercase font-semibold cursor-pointer
               hover:bg-blue-900 hover:shadow-xl hover:shadow-blue-300 hover:-translate-y-1
               active:scale-95 transition-all duration-300">
               Quero agendar minha visita
@@ -548,23 +563,23 @@ export default function Home() {
                   <h2 className="text-white text-xl md:text-2xl font-semibold">Receba uma análise do seu projecto</h2>
                   <form onSubmit={handleSubmit}>
                     <div className="mt-4 flex flex-col gap-4">
-                      <input
-                        type="hidden"
-                        name="_next"
-                        value="https://sclickconstroi.pt/obrigado"
-                      />
-
-                      <input type="text" name="name" placeholder="Nome:"
+                      <input type="text" name="name" placeholder="Nome:" required
+                        value={name} onChange={(e) => setName(e.target.value)}
                         className="bg-white py-3 px-4 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:scale-[1.01] transition-transform duration-200" />
-                      <input type="text" name="contact" placeholder="Número ou email:"
+                      <input type="text" name="contact" placeholder="Número ou email:" required
+                        value={contact} onChange={(e) => setContact(e.target.value)}
                         className="bg-white py-3 px-4 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:scale-[1.01] transition-transform duration-200" />
                       <input type="text" name="project-type" placeholder="Qual o tipo de projecto?"
+                        value={project_type} onChange={(e) => setProjectType(e.target.value)}
                         className="bg-white py-3 px-4 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:scale-[1.01] transition-transform duration-200" />
                       <textarea name="message" placeholder="Descrição adicional:"
+                        value={message} onChange={(e) => setMessage(e.target.value)}
                         className="bg-white py-3 px-4 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:scale-[1.01] transition-transform duration-200 resize-none h-24" />
-                      <button className="bg-blue-700 text-white text-sm tracking-wider py-3 px-6 rounded uppercase font-semibold cursor-pointer
-                      hover:bg-blue-600 hover:shadow-lg hover:-translate-y-0.5 active:scale-95 transition-all duration-300">
-                        Pedir análise de projecto
+                      <button type="submit" disabled={submitting}
+                        className="bg-blue-700 text-white text-sm tracking-wider py-3 px-6 rounded uppercase font-semibold cursor-pointer
+                      hover:bg-blue-600 hover:shadow-lg hover:-translate-y-0.5 active:scale-95 transition-all duration-300
+                      disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0">
+                        {submitting ? "A enviar..." : "Pedir análise de projecto"}
                       </button>
                     </div>
                   </form>
@@ -573,7 +588,7 @@ export default function Home() {
                 <div className="flex flex-col gap-5 w-full md:w-auto">
                   {[
                     { icon: PhoneInTalkIcon, title: "Número de telefone", value: "(351) 931 787 768" },
-                    { icon: MailIcon, title: "Email", value: "geral@slickconstroi.pt" },
+                    { icon: MailIcon, title: "Email", value: "geral@sclickconstroi.pt" },
                     { icon: LocationOnIcon, title: "Endereço", value: "Praceta Timor Lorosae, Lote 22B, R/C DTO" },
                     { icon: ScheduleIcon, title: "Horário de atendimento", value: "Segunda a Sexta: 9h - 18h" },
                   ].map((item) => (
