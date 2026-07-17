@@ -145,6 +145,7 @@ function SkeletonImage({ src, alt, width, height, className, fill, priority }: {
         height={fill ? undefined : height}
         fill={fill}
         priority={priority}
+        style={fill ? undefined : { width: "100%", height: "auto" }}
         className={`${className} transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
         onLoad={() => setLoaded(true)}
       />
@@ -248,7 +249,7 @@ export default function Home() {
               <span className="w-4 h-0.5 bg-gray-800" />
             </button>
 
-            <Image src="/logo.png" alt="Sclick Constroi" width={40} height={20} priority />
+            <Image src="/logo.png" alt="Sclick Constroi" width={40} height={20} priority style={{ height: "20px", width: "auto" }} />
 
             <ol className="hidden md:flex gap-4 lg:gap-6 items-center">
               {navLinks.map((link) => (
@@ -312,7 +313,7 @@ export default function Home() {
           transition-transform duration-300 ease-in-out md:hidden
           ${menuOpen ? "translate-x-0" : "-translate-x-full"}`}>
           <div className="flex justify-between items-center px-6 py-5 border-b border-gray-100">
-            <Image src="/logo.png" alt="Sclick Constroi" width={40} height={20} priority />
+            <Image src="/logo.png" alt="Sclick Constroi" width={40} height={20} priority style={{ height: "20px", width: "auto" }} />
             <button onClick={() => setMenuOpen(false)}
               className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors cursor-pointer">
               <span className="text-gray-600 text-xl leading-none">✕</span>
@@ -400,8 +401,10 @@ export default function Home() {
 
             <FadeSection delay={150} className="flex-1 flex justify-center">
               <div ref={bannerParallax.ref} style={{ transform: `translateY(${bannerParallax.offset * -0.5}px)` }}>
-                <SkeletonImage src="/images/side_right_banner.png" alt="Banner decorativo"
-                  width={500} height={500} priority className="w-full max-w-xs md:max-w-sm lg:max-w-[500px] h-auto" />
+                <div className="animate-float">
+                  <SkeletonImage src="/images/side_right_banner.png" alt="Banner decorativo"
+                    width={500} height={500} priority className="w-full max-w-xs md:max-w-sm lg:max-w-[500px] h-auto" />
+                </div>
               </div>
             </FadeSection>
           </div>
@@ -579,7 +582,7 @@ export default function Home() {
                         className="bg-blue-700 text-white text-sm tracking-wider py-3 px-6 rounded uppercase font-semibold cursor-pointer
                       hover:bg-blue-600 hover:shadow-lg hover:-translate-y-0.5 active:scale-95 transition-all duration-300
                       disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0">
-                        {submitting ? "A enviar..." : "Pedir análise de projecto"}
+                        {submitting ? "A enviar..." : "Pedir orçamento"}
                       </button>
                     </div>
                   </form>
@@ -634,6 +637,13 @@ export default function Home() {
         @keyframes progress {
           from { width: 0% }
           to { width: 100% }
+        }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-16px); }
+        }
+        .animate-float {
+          animation: float 4s ease-in-out infinite;
         }
       `}</style>
     </>
