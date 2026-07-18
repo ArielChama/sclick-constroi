@@ -240,7 +240,7 @@ export default function Home() {
       <div className="h-full overflow-x-hidden">
         <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300
           ${scrolled ? "bg-white/95 backdrop-blur-md shadow-md" : "bg-transparent"}`}>
-          <nav className="flex justify-between items-center px-6 md:px-16 lg:px-[250px] py-4">
+          <nav className="flex justify-between items-center px-6 md:px-16 lg:px-[250px] ">
 
             <button onClick={() => setMenuOpen(true)}
               className="md:hidden flex flex-col gap-1.5 p-2 cursor-pointer" aria-label="Abrir menu">
@@ -249,7 +249,7 @@ export default function Home() {
               <span className="w-4 h-0.5 bg-gray-800" />
             </button>
 
-            <Image src="/logo.png" alt="Sclick Constroi" width={40} height={20} priority style={{ height: "20px", width: "auto" }} />
+            <Image src="/logo.png" alt="Sclick Constroi" width={64} height={32} priority style={{ height: "90px", width: "auto" }} />
 
             <ol className="hidden md:flex gap-4 lg:gap-6 items-center">
               {navLinks.map((link) => (
@@ -313,7 +313,7 @@ export default function Home() {
           transition-transform duration-300 ease-in-out md:hidden
           ${menuOpen ? "translate-x-0" : "-translate-x-full"}`}>
           <div className="flex justify-between items-center px-6 py-5 border-b border-gray-100">
-            <Image src="/logo.png" alt="Sclick Constroi" width={40} height={20} priority style={{ height: "20px", width: "auto" }} />
+            <Image src="/logo.png" alt="Sclick Constroi" width={64} height={32} priority style={{ height: "32px", width: "auto" }} />
             <button onClick={() => setMenuOpen(false)}
               className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors cursor-pointer">
               <span className="text-gray-600 text-xl leading-none">✕</span>
@@ -515,16 +515,18 @@ export default function Home() {
                   width={280} height={360} className="object-contain" />
               </FadeSection>
               {[
-                { title: "Experiência em Obras Públicas e Particulares", desc: "Anos de experiência ao serviço de clientes públicos e privados." },
-                { title: "Equipa Qualificada e Especializada", desc: "Profissionais experientes, comprometidos com cada projeto." },
-                { title: "Materiais de Elevada Qualidade", desc: "Selecionamos materiais que garantem durabilidade e bom acabamento." },
-                { title: "Soluções Personalizadas", desc: "Cada projeto é pensado à medida das necessidades do cliente." },
-                { title: "Rigor e Profissionalismo", desc: "Acompanhamento em todas as fases da obra, do início ao fim." },
+                { icon: FactoryIcon, title: "Experiência em Obras Públicas e Particulares", desc: "Anos de experiência ao serviço de clientes públicos e privados." },
+                { icon: PeopleIcon, title: "Equipa Qualificada e Especializada", desc: "Profissionais experientes, comprometidos com cada projeto." },
+                { icon: ManufacturingIcon, title: "Materiais de Elevada Qualidade", desc: "Selecionamos materiais que garantem durabilidade e bom acabamento." },
+                { icon: SquareIcon, title: "Soluções Personalizadas", desc: "Cada projeto é pensado à medida das necessidades do cliente." },
+                { icon: CalendarIcon, title: "Rigor e Profissionalismo", desc: "Acompanhamento em todas as fases da obra, do início ao fim." },
               ].map((item, i) => (
                 <FadeSection key={item.title} delay={i * 80}>
                   <div className="flex items-start gap-4 group">
-                    <div className="bg-blue-100 p-4 rounded-lg w-14 h-14 flex items-center justify-center shrink-0
-                      group-hover:bg-blue-600 transition-all duration-300" />
+                    <div className="bg-blue-100 text-blue-600 p-4 rounded-lg w-14 h-14 flex items-center justify-center shrink-0
+                      group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+                      <item.icon width={22} height={22} className="fill-current" />
+                    </div>
                     <div>
                       <h3 className="font-bold text-base">{item.title}</h3>
                       <p className="text-gray-500 text-sm mt-1">{item.desc}</p>
@@ -551,7 +553,7 @@ export default function Home() {
             <button onClick={() => scrollToSection("contactos")} className="bg-blue-700 text-white text-sm tracking-wider py-3 px-10 md:px-12 rounded uppercase font-semibold cursor-pointer
               hover:bg-blue-900 hover:shadow-xl hover:shadow-blue-300 hover:-translate-y-1
               active:scale-95 transition-all duration-300">
-              Quero agendar minha visita
+              Entrar em contacto
             </button>
           </FadeSection>
         </main>

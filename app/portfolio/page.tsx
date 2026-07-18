@@ -17,7 +17,7 @@ const navLinks = [
   { label: "Sobre", id: "sobre" },
   { label: "Serviços", id: "servicos" },
   { label: "Diferenciais", id: "diferenciais" },
-  { label: "Portfólio", id: "portfolio" },
+  { label: "Portfolio", id: "portfolio" },
   { label: "Contactos", id: "contactos" },
 ]
 
@@ -31,13 +31,44 @@ const serviceMenuItems = [
 ]
 
 // Galeria de projetos — substitua/adicione imagens reais em /public/portfolio
+// "images" é a lista de fotos desse trabalho, mostradas no modal ao clicar.
 const galleryItems = [
-  { image: "/images/trabalho-1.jpeg", title: "Remodelação", category: "Remodelação" },
-  { image: "/projects/project-2.jpg", title: "Remodelação Completa", category: "Remodelação" },
-  { image: "/projects/project-3.jpg", title: "Edifício Comercial", category: "Construção civil" },
-  { image: "/projects/project-4.jpg", title: "Construção LSF", category: "Construção LSF" },
-  { image: "/images/about-us.jpeg", title: "Projeto Residencial", category: "Construção civil" },
-  { image: "/images/construct_build.png", title: "Obra em Curso", category: "Construção civil" },
+  {
+    title: "Remodelação",
+    category: "Remodelação",
+    description: "Remodelação completa de interiores, com novos acabamentos, pavimentos e iluminação.",
+    images: ["/images/trabalho-1.jpeg", "/projects/project-2.jpg", "/images/about-us.jpeg"],
+  },
+  {
+    title: "Remodelação Completa",
+    category: "Remodelação",
+    description: "Transformação total de um espaço residencial, do projeto aos acabamentos finais.",
+    images: ["/projects/project-2.jpg", "/images/trabalho-1.jpeg"],
+  },
+  {
+    title: "Edifício Comercial",
+    category: "Construção civil",
+    description: "Construção de um edifício comercial com foco em funcionalidade e design moderno.",
+    images: ["/projects/project-3.jpg", "/images/construct_build.png", "/projects/project-4.jpg"],
+  },
+  {
+    title: "Construção LSF",
+    category: "Construção LSF",
+    description: "Estrutura em Light Steel Frame — construção rápida, sustentável e de elevado desempenho térmico.",
+    images: ["/projects/project-4.jpg", "/images/construct_build.png"],
+  },
+  {
+    title: "Projeto Residencial",
+    category: "Construção civil",
+    description: "Construção de raiz de uma moradia unifamiliar, do levantamento de alvenaria aos acabamentos.",
+    images: ["/images/about-us.jpeg", "/images/trabalho-1.jpeg", "/projects/project-3.jpg"],
+  },
+  {
+    title: "Obra em Curso",
+    category: "Construção civil",
+    description: "Acompanhamento próximo em todas as fases da obra, com rigor técnico e cumprimento de prazos.",
+    images: ["/images/construct_build.png", "/projects/project-3.jpg"],
+  },
 ]
 
 // ── HOOKS ──────────────────────────────────────────────────
@@ -92,6 +123,9 @@ export default function PortfolioPage() {
   const [servicesOpen, setServicesOpen] = useState(false)
   const [mobileServicesOpen, setMobileServicesOpen] = useState(false)
   const [filter, setFilter] = useState("Todos")
+  const [openItem, setOpenItem] = useState<number | null>(null)
+  const [imageIndex, setImageIndex] = useState(0)
+  const touchStartX = useRef<number | null>(null)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
@@ -100,23 +134,70 @@ export default function PortfolioPage() {
   }, [])
 
   useEffect(() => {
-    document.body.style.overflow = menuOpen ? "hidden" : ""
+    document.body.style.overflow = (menuOpen || openItem !== null) ? "hidden" : ""
     return () => { document.body.style.overflow = "" }
-  }, [menuOpen])
+  }, [menuOpen, openItem])
+
+  const openModal = useCallback((index: number) => {
+    setOpenItem(index)
+    setImageIndex(0)
+  }, [])
+
+  const closeModal = useCallback(() => {
+    setOpenItem(null)
+  }, [])
+
+  const activeItem = openItem !== null ? galleryItems[openItem] : null
+
+  const nextImage = useCallback(() => {
+    if (!activeItem) return
+    setImageIndex((i) => (i + 1) % activeItem.images.length)
+  }, [activeItem])
+
+  const prevImage = useCallback(() => {
+    if (!activeItem) return
+    setImageIndex((i) => (i - 1 + activeItem.images.length) % activeItem.images.length)
+  }, [activeItem])
+
+  // Navegação por teclado dentro do modal
+  useEffect(() => {
+    if (openItem === null) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeModal()
+      if (e.key === "ArrowRight") nextImage()
+      if (e.key === "ArrowLeft") prevImage()
+    }
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [openItem, closeModal, nextImage, prevImage])
+
+  // Swipe para mobile
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+  }
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current
+    if (deltaX > 50) prevImage()
+    else if (deltaX < -50) nextImage()
+    touchStartX.current = null
+  }
 
   const scrollToServiceOnServicesPage = useCallback((id: string) => {
     window.location.href = `/servicos#${id}`
   }, [])
 
   const categories = ["Todos", ...Array.from(new Set(galleryItems.map((g) => g.category)))]
-  const filtered = filter === "Todos" ? galleryItems : galleryItems.filter((g) => g.category === filter)
+  const filtered = galleryItems
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => filter === "Todos" || item.category === filter)
 
   return (
     <>
       <div className="h-full overflow-x-hidden">
         <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300
           ${scrolled ? "bg-white/95 backdrop-blur-md shadow-md" : "bg-white"}`}>
-          <nav className="flex justify-between items-center px-6 md:px-16 lg:px-[250px] py-4">
+          <nav className="flex justify-between items-center px-6 md:px-16 lg:px-[250px]">
 
             <button onClick={() => setMenuOpen(true)}
               className="md:hidden flex flex-col gap-1.5 p-2 cursor-pointer" aria-label="Abrir menu">
@@ -126,7 +207,7 @@ export default function PortfolioPage() {
             </button>
 
             <Link href="/">
-              <Image src="/logo.png" alt="Sclick Constroi" width={40} height={20} priority />
+              <Image src="/logo.png" alt="Sclick Constroi" width={64} height={32} priority style={{ height: "90px", width: "auto" }} />
             </Link>
 
             <ol className="hidden md:flex gap-4 lg:gap-6 items-center">
@@ -185,7 +266,7 @@ export default function PortfolioPage() {
           transition-transform duration-300 ease-in-out md:hidden
           ${menuOpen ? "translate-x-0" : "-translate-x-full"}`}>
           <div className="flex justify-between items-center px-6 py-5 border-b border-gray-100">
-            <Image src="/logo.png" alt="Sclick Constroi" width={40} height={20} priority />
+            <Image src="/logo.png" alt="Sclick Constroi" width={64} height={32} priority style={{ height: "32px", width: "auto" }} />
             <button onClick={() => setMenuOpen(false)}
               className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors cursor-pointer">
               <span className="text-gray-600 text-xl leading-none">✕</span>
@@ -248,8 +329,8 @@ export default function PortfolioPage() {
         {/* HERO */}
         <section className="pt-32 md:pt-40 pb-12 md:pb-16 px-6 md:px-16 lg:px-[250px] bg-gradient-to-br from-blue-50 via-white to-blue-100">
           <FadeSection className="max-w-2xl">
-            <p className="text-blue-700 text-sm font-bold mb-3">Portfólio</p>
-            <h1 className="text-3xl md:text-4xl lg:text-[40px] font-bold leading-tight mb-5">O Nosso Portfólio</h1>
+            <p className="text-blue-700 text-sm font-bold mb-3">Portfolio</p>
+            <h1 className="text-3xl md:text-4xl lg:text-[40px] font-bold leading-tight mb-5">O Nosso Portfolio</h1>
             <p className="leading-7 text-sm md:text-base font-light">
               Conheça alguns dos projetos que já desenvolvemos. Cada obra reflete o mesmo compromisso com a qualidade, o rigor técnico e a atenção ao detalhe que aplicamos em todos os trabalhos da SClick constroi.
             </p>
@@ -273,22 +354,97 @@ export default function PortfolioPage() {
             </FadeSection>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filtered.map((item, i) => (
-                <FadeSection key={i} delay={i * 80}>
-                  <div className="group relative overflow-hidden rounded-lg h-64 shadow-md hover:shadow-xl transition-all duration-300">
-                    <SkeletonImage src={item.image} alt={item.title}
+              {filtered.map(({ item, index }, i) => (
+                <FadeSection key={index} delay={i * 80}>
+                  <button onClick={() => openModal(index)}
+                    className="group relative overflow-hidden rounded-lg h-64 w-full shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer text-left">
+                    <SkeletonImage src={item.images[0]} alt={item.title}
                       className="object-cover group-hover:scale-105 transition-transform duration-500" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+                    {/* Título + categoria sempre visíveis; descrição desliza para dentro ao passar o rato */}
                     <div className="absolute bottom-0 left-0 right-0 p-4">
                       <p className="text-white/70 text-xs uppercase tracking-wide mb-1">{item.category}</p>
                       <h3 className="text-white text-base font-semibold">{item.title}</h3>
+                      <p className="text-white/90 text-xs leading-relaxed overflow-hidden max-h-0 opacity-0
+                        group-hover:max-h-20 group-hover:opacity-100 group-hover:mt-2
+                        transition-all duration-300 ease-out">
+                        {item.description}
+                      </p>
                     </div>
-                  </div>
+
+                    {item.images.length > 1 && (
+                      <span className="absolute top-3 right-3 bg-black/50 text-white text-xs font-medium px-2 py-1 rounded-full backdrop-blur-sm">
+                        +{item.images.length} fotos
+                      </span>
+                    )}
+                  </button>
                 </FadeSection>
               ))}
             </div>
           </section>
         </main>
+
+        {/* MODAL — galeria de imagens do trabalho selecionado */}
+        {activeItem && (
+          <div
+            className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 md:p-8"
+            onClick={closeModal}
+          >
+            <button onClick={closeModal} aria-label="Fechar"
+              className="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20
+                text-white flex items-center justify-center text-xl transition-all duration-200 cursor-pointer z-10">
+              ✕
+            </button>
+
+            <div
+              className="relative w-full max-w-4xl flex flex-col items-center"
+              onClick={(e) => e.stopPropagation()}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
+              <div className="relative w-full h-[50vh] md:h-[65vh] rounded-lg overflow-hidden bg-black">
+                <Image
+                  src={activeItem.images[imageIndex]}
+                  alt={activeItem.title}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 800px"
+                  className="object-contain"
+                />
+
+                {activeItem.images.length > 1 && (
+                  <>
+                    <button onClick={prevImage} aria-label="Imagem anterior"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20
+                        text-white flex items-center justify-center text-2xl transition-all duration-200 cursor-pointer">‹</button>
+                    <button onClick={nextImage} aria-label="Próxima imagem"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20
+                        text-white flex items-center justify-center text-2xl transition-all duration-200 cursor-pointer">›</button>
+                  </>
+                )}
+              </div>
+
+              <div className="w-full mt-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div>
+                  <p className="text-blue-400 text-xs uppercase tracking-wide mb-1">{activeItem.category}</p>
+                  <h3 className="text-white text-lg font-semibold">{activeItem.title}</h3>
+                  <p className="text-white/70 text-sm mt-1 max-w-xl">{activeItem.description}</p>
+                </div>
+
+                {activeItem.images.length > 1 && (
+                  <div className="flex gap-2 shrink-0">
+                    {activeItem.images.map((_, di) => (
+                      <button key={di} onClick={() => setImageIndex(di)}
+                        aria-label={`Imagem ${di + 1}`}
+                        className={`h-2 rounded-full transition-all duration-300 cursor-pointer border-none
+                          ${di === imageIndex ? "w-6 bg-blue-500" : "w-2 bg-white/30 hover:bg-white/50"}`} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         <footer className="bg-black/90 pt-16 pb-10 px-6 md:px-16 lg:px-[250px]">
           <div className="py-4 flex justify-center gap-4">

@@ -133,7 +133,7 @@ export default function ServicosPage() {
       <div className="h-full overflow-x-hidden">
         <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300
           ${scrolled ? "bg-white/95 backdrop-blur-md shadow-md" : "bg-white"}`}>
-          <nav className="flex justify-between items-center px-6 md:px-16 lg:px-[250px] py-4">
+          <nav className="flex justify-between items-center px-6 md:px-16 lg:px-[250px]">
 
             <button onClick={() => setMenuOpen(true)}
               className="md:hidden flex flex-col gap-1.5 p-2 cursor-pointer" aria-label="Abrir menu">
@@ -143,7 +143,7 @@ export default function ServicosPage() {
             </button>
 
             <Link href="/">
-              <Image src="/logo.png" alt="Sclick Constroi" width={40} height={20} priority />
+              <Image src="/logo.png" alt="Sclick Constroi" width={40} height={20} priority style={{ height: "90px", width: "auto" }} />
             </Link>
 
             <ol className="hidden md:flex gap-4 lg:gap-6 items-center">
@@ -537,7 +537,7 @@ export default function ServicosPage() {
             <Link href="/#contactos" className="bg-blue-700 text-white text-sm tracking-wider py-3 px-10 md:px-12 rounded uppercase font-semibold cursor-pointer
               hover:bg-blue-900 hover:shadow-xl hover:shadow-blue-300 hover:-translate-y-1
               active:scale-95 transition-all duration-300 inline-block">
-              Pedir análise de projecto
+              Entrar em contacto
             </Link>
           </FadeSection>
         </main>
