@@ -545,16 +545,16 @@ export default function ServicosPage() {
         <footer className="bg-black/90 pt-16 pb-10 px-6 md:px-16 lg:px-[250px]">
           <div className="py-4 flex justify-center gap-4">
             {[
-              { icon: FacebookIcon, label: "Facebook" },
-              { icon: LinkedinIcon, label: "LinkedIn" },
-              { icon: InstagramIcon, label: "Instagram" },
-            ].map(({ icon: Icon, label }) => (
-              <button key={label} aria-label={label}
+              { icon: FacebookIcon, label: "Facebook", link: "https://www.facebook.com/share/1Dzybf2jK3/?mibextid=wwXIfr" },
+              { icon: LinkedinIcon, label: "LinkedIn", link: "https://www.linkedin.com/company/successclick-uniplda/" },
+              { icon: InstagramIcon, label: "Instagram", link: "https://www.instagram.com/sclickconstroi?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" },
+            ].map(({ icon: Icon, label, link }) => (
+              <a key={label} href={link} target="_blank" rel="noopener noreferrer" aria-label={label}
                 className="bg-blue-700 p-2 rounded cursor-pointer
-                  hover:bg-blue-500 hover:scale-110 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/40
-                  active:scale-95 transition-all duration-300">
+                    hover:bg-blue-500 hover:scale-110 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/40
+                    active:scale-95 transition-all duration-300">
                 <Icon width={20} height={20} color="white" />
-              </button>
+              </a>
             ))}
           </div>
           <div className="border-t border-gray-600 py-6">
